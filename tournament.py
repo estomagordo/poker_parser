@@ -17,14 +17,14 @@ class Tournament:
     def did_hero_cash(self):
         last_hand = self.hands[-1]
 
-        if last_hand.hero + last_hand.hero_delta > 0:
+        if last_hand.hero_after:
             return True
 
         if not any(v == 0 for v in last_hand.villains_after):
             return False
 
         surviving_villain_count = len(v for v in last_hand.villains_after if v)
-        eliminated_villain_stacks = sorted([last_hand.villains_before[x] for x in range(len(last_hand.villains_before)) if not last_hand.villains_after[x]])
+        eliminated_villain_stacks = sorted([last_hand.villains[x] for x in range(len(last_hand.villains)) if not last_hand.villains_after[x]])
 
         if surviving_villain_count > 2:
             return > False
