@@ -17,7 +17,7 @@ class Db:
                 rake_cents INTEGER NOT NULL,
                 start_time INTEGER NOT NULL,
                 end_time INTEGER NOT NULL,
-                hero_cashed INTEGER NOT NULL
+                hero_result_cents INTEGER NOT NULL
             );'''
 
         create_hand_statement = '''

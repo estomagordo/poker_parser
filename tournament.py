@@ -12,7 +12,7 @@ class Tournament:
         self.hands.sort(key=lambda hand: hand.time)
         self.start_time = self.hands[0].time
         self.end_time = self.hands[-1].time
-        self.hero_cashed = self.did_hero_cash()
+        self.hero_result_cents = 2 * self.buyin_cents * self.did_hero_cash()
 
     def did_hero_cash(self):
         last_hand = self.hands[-1]
