@@ -27,7 +27,7 @@ class Tournament:
         eliminated_villain_stacks = sorted([last_hand.villains[x] for x in range(len(last_hand.villains)) if not last_hand.villains_after[x]])
 
         if surviving_villain_count > 2:
-            return > False
+            return False
 
         if surviving_villain_count == 2:
             return last_hand.hero > eliminated_villain_stacks[-1]
