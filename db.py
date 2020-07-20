@@ -12,6 +12,7 @@ class Db:
     def create_if_needed(self):
         create_tournament_statement = '''
             CREATE TABLE IF NOT EXISTS tournament (
+                id TEXT PRIMARY KEY,
                 buyin_cents INTEGER NOT NULL,
                 rake_cents INTEGER NOT NULL,
                 start_time INTEGER NOT NULL,
