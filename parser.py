@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from os import listdir
 from sys import argv
 
+import plot
+
 from hand import Hand
 from tournament import Tournament
 
@@ -257,6 +259,8 @@ def main():
     print(f'Cashed in {cashes} ({to_percentage(cashes / tournament_count)}%)')
     print(f'Made a profit of ${formated_profit} (ROI {to_percentage(roi)}%)')
     print(f'Longest win streak: {win_longest}. Longest lose streak: {lose_longest}.')
+
+    plot.plot_tournaments(tournobjs, 'results.svg')
 
 if __name__ == '__main__':
     main()
