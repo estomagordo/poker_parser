@@ -19,25 +19,25 @@ class Hand:
         full):
         self.id = id
         self.time = time
-        self.tournament_id = tournament_id,
-        self.sb = sb,
-        self.bb = bb,
-        self.ante = ante,
-        self.hero_pos = hero_pos,
-        self.player_count = player_count,
-        self.hero = hero,
-        self.hero_after = hero_after,
-        self.villains = villains,
-        self.hero_cards = hero_cards,
-        self.flop = flop,
-        self.turn = turn,
-        self.river = river,
+        self.tournament_id = tournament_id
+        self.sb = sb
+        self.bb = bb
+        self.ante = ante
+        self.hero_pos = hero_pos
+        self.player_count = player_count
+        self.hero = hero
+        self.hero_after = hero_after
+        self.villains = villains
+        self.hero_cards = hero_cards
+        self.flop = flop
+        self.turn = turn
+        self.river = river
         self.full = full
 
         self.setup_villains()
 
     def setup_villains(self):
-        for x, villain in enumerate(self.villains[0]):
+        for x, villain in enumerate(self.villains):
             if villain[0] == -1:
                 break
 
