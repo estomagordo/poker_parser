@@ -37,7 +37,7 @@ class Hand:
         self.setup_villains()
 
     def setup_villains(self):
-        for x, villain in enumerate(self.villains):
+        for x, villain in enumerate(self.villains[0]):
             if villain[0] == -1:
                 break
 
