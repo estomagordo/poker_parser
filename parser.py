@@ -289,7 +289,7 @@ def main():
     if use_db:
         update_database(tournobjs)
 
-    plot.plot_tournaments(tournobjs, 'results.svg')
+    plot.plot_tournaments(tournobjs, 'plots//results.svg')
 
 if __name__ == '__main__':
     main()

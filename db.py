@@ -5,7 +5,7 @@ class Db:
         if connstring:
             self.connection = sqlite3.connect(connstring)
         else:
-            self.connection = sqlite3.connect('//poker.db')
+            self.connection = sqlite3.connect('db//poker.db')
 
         self.cursor = self.connection.cursor()
 
