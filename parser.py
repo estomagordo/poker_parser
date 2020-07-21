@@ -13,11 +13,18 @@ def parse_datetime(s):
     EDT = 'EDT'
     UTC = 'UTC'
     DATE_FORMAT = '%a %b %d %H:%M:%S %Z %Y'
-    time_diff = 4
+    TIME_DIFF = 4
 
     dt = datetime.strptime(s.replace(EDT, UTC), DATE_FORMAT)
 
-    return int((dt + timedelta(hours=time_diff)).timestamp())
+    return int((dt + timedelta(hours=TIME_DIFF)).timestamp())
+
+
+def parse_timestamp(n):
+    SHORT_DATE_FORMAT = '%Y-%m-%d %H:%M:%S'
+    TIME_DIFF = 4 * 3600
+
+    return time.strftime(SHORT_DATE_FORMAT, time.gmtime(n + TIME_DIFF))
 
 
 def parse_cents(s):
@@ -210,20 +217,46 @@ def main():
     profit = 0.0
     wagered = 0.0
     cashes = 0
+    win_streak = 0
+    win_longest = 0
+    lose_streak = 0
+    lose_longest = 0
+    first_time = 10**10
+    last_time = 0
 
     for t in tournobjs:
         profit += t.hero_result_cents
         wagered += t.buyin_cents + t.rake_cents
+
+        first_time = min(first_time, t.start_time)
+        last_time = max(last_time, t.start_time)
+
         if t.hero_result_cents > 0.0:
             cashes += 1
+            win_streak += 1
+            lose_longest = max(lose_longest, lose_streak)
+            lose_streak = 0
+        else:
+            win_longest = max(win_longest, win_streak)
+            win_streak = 0
+            lose_streak += 1
+
+    win_longest = max(win_longest, win_streak)
+    lose_longest = max(lose_longest, lose_streak)
 
     roi = ((profit + wagered) / wagered) - 1.0
     formated_profit = '%.2f' % (profit / 100.0)
     elapsed = '%.2f' % (time.time() - start_time)
 
+    first_start = parse_timestamp(first_time)
+    last_start = parse_timestamp(last_time)
+
     print(f'Found {tournament_count} tournaments in {elapsed} seconds.')
+    print(f'The first one started at: {first_start}')
+    print(f'The last one started at: {last_start}')
     print(f'Cashed in {cashes} ({to_percentage(cashes / tournament_count)}%)')
     print(f'Made a profit of ${formated_profit} (ROI {to_percentage(roi)}%)')
+    print(f'Longest win streak: {win_longest}. Longest lose streak: {lose_longest}.')
 
 if __name__ == '__main__':
     main()
