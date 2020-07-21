@@ -9,6 +9,70 @@ class Db:
 
         self.cursor = self.connection.cursor()
 
+    def close(self):
+        self.connection.close()
+
+    def upsert_tournament(self, tournament):
+        data = (
+            tournament.id,
+            tournament.buyin_cents,
+            tournament.rake_cents,
+            tournament.start_time,
+            tournament.end_time,
+            tournament.hero_result_cents
+        )
+
+        self.cursor.execute('INSERT OR REPLACE INTO tournament VALUES (?, ?, ?, ?, ?, ?)', data)
+        self.connection.commit()        
+
+    def upsert_hand(self, hand):
+        data = (
+            hand.id,
+            hand.time,
+            hand.tournament_id,
+            hand.sb,
+            hand.bb,
+            hand.ante,
+            hand.hero_pos,
+            hand.player_count,
+            hand.villains[0][0],
+            hand.villains[1][0],
+            hand.villains[2][0],
+            hand.villains[3][0],
+            hand.villains[4][0],
+            hand.villains[5][0],
+            hand.villains[6][0],
+            hand.villains[7][0],
+            hand.villains[8][0],
+            hand.hero_after,
+            hand.villains[0][1],
+            hand.villains[1][1],
+            hand.villains[2][1],
+            hand.villains[3][1],
+            hand.villains[4][1],
+            hand.villains[5][1],
+            hand.villains[6][1],
+            hand.villains[7][1],
+            hand.villains[8][1],
+            hand.hero_cards,
+            hand.villains[0][2],
+            hand.villains[1][2],
+            hand.villains[2][2],
+            hand.villains[3][2],
+            hand.villains[4][2],
+            hand.villains[5][2],
+            hand.villains[6][2],
+            hand.villains[7][2],
+            hand.villains[8][2],
+            hand.flop,
+            hand.turn,
+            hand.river,
+            hand.full
+        )
+
+        self.cursor.execute('INSERT OR REPLACE INTO hand VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
+        self.connection.commit()    
+
     def create_if_needed(self):
         create_tournament_statement = '''
             CREATE TABLE IF NOT EXISTS tournament (
@@ -69,11 +133,3 @@ class Db:
         self.cursor.execute(create_tournament_statement)
         self.cursor.execute(create_hand_statement)
         self.connection.commit()
-
-
-def main():
-    db = Db()
-    db.create_if_needed()
-
-if __name__ == '__main__':
-    main()
