@@ -71,7 +71,7 @@ def parse_hand(lines):
         if line[:2] == ['Dealt', 'to', 'Hero']:
             hero_cards = line[4][:-1] + line[5]
         elif line[2] == 'Flop':
-            flop = line[6][:-1] + line[7] + line[8]
+            flop = line[6][:-1] + line[7][:-1] + line[8]
         elif line[2] == 'Turn':
             turn = line[6]
         elif line[2] == 'River':
