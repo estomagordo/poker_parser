@@ -1,4 +1,7 @@
+from collections import defaultdict
 from datetime import datetime, timedelta
+from os import listdir
+from sys import argv
 
 from hand import Hand
 
@@ -126,3 +129,39 @@ def parse_hand(lines):
         )
     
     return tournament_id, buyin_cents, rake_cents, hand
+
+
+def parse_file(filename):
+    tournaments = defaultdict(list)
+
+    handpart = []
+
+    with open(filename) as f:
+        for line in f.readlines():
+            if line:
+                handpart.append(line.split())
+            elif handpart:
+                if handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1':
+                    tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
+                    tournaments[(tournament_id, buyin_cents, rake_cents)].append(hand)
+                handpart = []
+
+    if handpart:
+        if handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1':
+            tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
+            tournaments[(tournament_id, buyin_cents, rake_cents)].append(hand)
+
+    print(len(tournaments))
+
+def main():
+    mode, path = argv[1], argv[2]
+    
+    if mode == 'f':
+        parse_file(path)
+    elif mode == 'd':
+        for filename in listdir(path):
+            if filename.endswith('txt'):
+                parse_file(filename)    
+
+if __name__ == '__main__':
+    main()
