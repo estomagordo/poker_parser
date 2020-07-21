@@ -41,3 +41,7 @@ debugpy*.log
 pydevd*.log
 nodeLanguageServer/**
 nodeLanguageServer.*/**
+.vscode/**
+hh/**
+plots/**
+db/**
