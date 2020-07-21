@@ -250,9 +250,7 @@ def update_database(tournobjs):
 def main():
     start_time = time.time()
 
-    # mode, path = argv[1], argv[2]
-    mode = 'd'
-    path = '.'
+    mode, path = argv[1], argv[2]
 
     tournaments = {}
     

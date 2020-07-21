@@ -9,7 +9,7 @@ class Hand:
         ante,
         hero_pos,
         player_count,
-        hero,
+        hero_before,
         hero_after,
         hero_cards,
         villains,
@@ -25,7 +25,7 @@ class Hand:
         self.ante = ante
         self.hero_pos = hero_pos
         self.player_count = player_count
-        self.hero = hero
+        self.hero_before = hero_before
         self.hero_after = hero_after
         self.villains = villains
         self.hero_cards = hero_cards

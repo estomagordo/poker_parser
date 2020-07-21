@@ -35,6 +35,7 @@ class Db:
             hand.ante,
             hand.hero_pos,
             hand.player_count,
+            hand.hero_before,
             hand.villains[0][0],
             hand.villains[1][0],
             hand.villains[2][0],
@@ -70,7 +71,7 @@ class Db:
             hand.full
         )
 
-        self.cursor.execute('INSERT OR REPLACE INTO hand VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
+        self.cursor.execute('INSERT OR REPLACE INTO hand VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
         self.connection.commit()    
 
     def create_if_needed(self):
@@ -94,15 +95,16 @@ class Db:
                 ante INTEGER,
                 hero_position INTEGER NOT NULL,
                 player_count INTEGER NOT NULL,
-                villain_0 INTEGER NOT NULL,
-                villain_1 INTEGER,
-                villain_2 INTEGER,
-                villain_3 INTEGER,
-                villain_4 INTEGER,
-                villain_5 INTEGER,
-                villain_6 INTEGER,
-                villain_7 INTEGER,
-                villain_8 INTEGER,
+                hero_before INTEGER NOT NULL,
+                villain_0_before INTEGER NOT NULL,
+                villain_1_before INTEGER,
+                villain_2_before INTEGER,
+                villain_3_before INTEGER,
+                villain_4_before INTEGER,
+                villain_5_before INTEGER,
+                villain_6_before INTEGER,
+                villain_7_before INTEGER,
+                villain_8_before INTEGER,
                 hero_after INTEGER NOT NULL,
                 villain_0_after INTEGER NOT NULL,
                 villain_1_after INTEGER,
