@@ -21,6 +21,9 @@ def parse_cents(s):
     if '.' not in s:
         return 100 * int(s)
 
+    if not s[-1].isdigit():
+        s = s[:-1]
+
     dollars, cents = list(map(int, s.split('.')))
 
     return 100 * dollars + cents
@@ -47,6 +50,8 @@ def parse_hand(lines):
     hero_after = -1
 
     for line in lines:
+        if len(line) < 3:
+            continue
         if line[:2] == ['Dealt', 'to', 'Hero']:
             hero_cards = line[4][:-1] + line[5]
         elif line[2] == 'Flop':
@@ -78,7 +83,11 @@ def parse_hand(lines):
         hand = ''
 
         if line[3] == 'lost':
-            before = after + int(line[4])
+            deltas = line[4]
+            if not deltas[-1].isdigit():
+                deltas = deltas[:-1]
+
+            before = after + int(deltas)
         else:
             for part in line:
                 if part[0] == '+':
@@ -138,23 +147,26 @@ def parse_file(filename):
 
     with open(filename) as f:
         for line in f.readlines():
-            if line:
+            if line.strip():
                 handpart.append(line.split())
             elif handpart:
-                if handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1':
+                if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
                     tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
                     tournaments[(tournament_id, buyin_cents, rake_cents)].append(hand)
                 handpart = []
 
     if handpart:
-        if handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1':
+        if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
             tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
             tournaments[(tournament_id, buyin_cents, rake_cents)].append(hand)
 
     print(len(tournaments))
 
+
 def main():
-    mode, path = argv[1], argv[2]
+    # mode, path = argv[1], argv[2]
+    mode = 'd'
+    path = '.'
     
     if mode == 'f':
         parse_file(path)
