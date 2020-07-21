@@ -253,6 +253,7 @@ def main():
     start_time = time.time()
 
     mode, path = argv[1], argv[2]
+    use_db = len(argv) > 3 and argv[3] == 'write'
 
     tournaments = {}
     
@@ -261,7 +262,7 @@ def main():
     elif mode == 'd':
         for filename in listdir(path):
             if filename.endswith('txt') and filename != 'requirements.txt':
-                parsed_tournaments = parse_file(filename)
+                parsed_tournaments = parse_file(path + '//' + filename)
                 for k, v in parsed_tournaments.items():
                     if k not in tournaments:
                         tournaments[k] = v
@@ -282,8 +283,11 @@ def main():
 
     elapsed = '%.2f' % (time.time() - start_time)
 
-    produce_stats(tournobjs, elapsed)
-    update_database(tournobjs)
+    if tournobjs:
+        produce_stats(tournobjs, elapsed)
+
+    if use_db:
+        update_database(tournobjs)
 
     plot.plot_tournaments(tournobjs, 'results.svg')
 
