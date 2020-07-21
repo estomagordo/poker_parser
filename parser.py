@@ -1,9 +1,12 @@
+import time
+
 from collections import defaultdict
 from datetime import datetime, timedelta
 from os import listdir
 from sys import argv
 
 from hand import Hand
+from tournament import Tournament
 
 
 def parse_datetime(s):
@@ -24,7 +27,10 @@ def parse_cents(s):
     if not s[-1].isdigit():
         s = s[:-1]
 
-    dollars, cents = list(map(int, s.split('.')))
+    parts = s.split('.')
+    dollars, cents = list(map(int, parts))
+    if len(parts[1]) == 1:
+        cents *= 10
 
     return 100 * dollars + cents
 
@@ -107,15 +113,15 @@ def parse_hand(lines):
     for x, line in enumerate(lines):
         if line[1] == 'balance':
             for i in range(player_count):
-                    if i == hero_line:
-                        hero_before, hero_after, _ = extract_player_info(line)
-                    else:
-                        villain_pos = (i - hero_line - 1) % (player_count - 1)
-                        
-                        if i < hero_line:
-                            villain_pos = (player_count - 1) + i - hero_line
+                if i == hero_line:
+                    hero_before, hero_after, _ = extract_player_info(lines[x + i])
+                else:
+                    villain_pos = (i - hero_line - 1) % (player_count - 1)
+                    
+                    if i < hero_line:
+                        villain_pos = (player_count - 1) + i - hero_line
 
-                        villains[villain_pos] = extract_player_info(line)
+                    villains[villain_pos] = extract_player_info(lines[x + i])
             break
 
     hand = Hand(
@@ -141,7 +147,7 @@ def parse_hand(lines):
 
 
 def parse_file(filename):
-    tournaments = defaultdict(list)
+    tournaments = defaultdict(dict)
 
     handpart = []
 
@@ -152,28 +158,72 @@ def parse_file(filename):
             elif handpart:
                 if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
                     tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
-                    tournaments[(tournament_id, buyin_cents, rake_cents)].append(hand)
+                    tournaments[(tournament_id, buyin_cents, rake_cents)][hand.id] = hand
                 handpart = []
 
     if handpart:
         if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
             tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
-            tournaments[(tournament_id, buyin_cents, rake_cents)].append(hand)
+            tournaments[(tournament_id, buyin_cents, rake_cents)][hand.id] = hand
+    
+    return tournaments
 
-    print(len(tournaments))
+
+def to_percentage(f):
+    return '%.2f' % (f * 100.0)
 
 
 def main():
+    start_time = time.time()
+
     # mode, path = argv[1], argv[2]
     mode = 'd'
     path = '.'
+
+    tournaments = {}
     
     if mode == 'f':
-        parse_file(path)
+        tournaments = dict(tournaments,  **parse_file(path))
     elif mode == 'd':
         for filename in listdir(path):
             if filename.endswith('txt'):
-                parse_file(filename)    
+                parsed_tournaments = parse_file(filename)
+                for k, v in parsed_tournaments.items():
+                    if k not in tournaments:
+                        tournaments[k] = v
+                    else:
+                        for hand_id in v.keys():
+                            if hand_id not in tournaments[k]:
+                                tournaments[k][hand_id] = v[hand_id]
+
+    tournobjs = []
+    
+    for k, v in tournaments.items():
+        tournament_id, buyin_cents, rake_cents = k
+        tournament = Tournament(tournament_id, buyin_cents, rake_cents, list(v.values()))
+        tournament.finalize()
+        tournobjs.append(tournament)
+
+    tournobjs.sort(key=lambda t: t.start_time)
+
+    tournament_count = len(tournobjs)
+    profit = 0.0
+    wagered = 0.0
+    cashes = 0
+
+    for t in tournobjs:
+        profit += t.hero_result_cents
+        wagered += t.buyin_cents + t.rake_cents
+        if t.hero_result_cents > 0.0:
+            cashes += 1
+
+    roi = ((profit + wagered) / wagered) - 1.0
+    formated_profit = '%.2f' % (profit / 100.0)
+    elapsed = '%.2f' % (time.time() - start_time)
+
+    print(f'Found {tournament_count} tournaments in {elapsed} seconds.')
+    print(f'Cashed in {cashes} ({to_percentage(cashes / tournament_count)}%)')
+    print(f'Made a profit of ${formated_profit} (ROI {to_percentage(roi)}%)')
 
 if __name__ == '__main__':
     main()
