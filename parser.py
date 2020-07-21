@@ -7,6 +7,7 @@ from sys import argv
 
 import plot
 
+from db import Db
 from hand import Hand
 from tournament import Tournament
 
@@ -133,6 +134,12 @@ def parse_hand(lines):
                     villains[villain_pos] = extract_player_info(lines[x + i])
             break
 
+    if not hero_cards:
+        for line in lines:
+            if line[:3] == ['Dealt', 'to', 'Hero']:
+                hero_cards = line[4][:-1] + line[5]
+                break
+
     hand = Hand(
         hand_id,
         time,
@@ -182,39 +189,7 @@ def to_percentage(f):
     return '%.2f' % (f * 100.0)
 
 
-def main():
-    start_time = time.time()
-
-    # mode, path = argv[1], argv[2]
-    mode = 'd'
-    path = '.'
-
-    tournaments = {}
-    
-    if mode == 'f':
-        tournaments = dict(tournaments,  **parse_file(path))
-    elif mode == 'd':
-        for filename in listdir(path):
-            if filename.endswith('txt'):
-                parsed_tournaments = parse_file(filename)
-                for k, v in parsed_tournaments.items():
-                    if k not in tournaments:
-                        tournaments[k] = v
-                    else:
-                        for hand_id in v.keys():
-                            if hand_id not in tournaments[k]:
-                                tournaments[k][hand_id] = v[hand_id]
-
-    tournobjs = []
-    
-    for k, v in tournaments.items():
-        tournament_id, buyin_cents, rake_cents = k
-        tournament = Tournament(tournament_id, buyin_cents, rake_cents, list(v.values()))
-        tournament.finalize()
-        tournobjs.append(tournament)
-
-    tournobjs.sort(key=lambda t: t.start_time)
-
+def produce_stats(tournobjs, elapsed):
     tournament_count = len(tournobjs)
     profit = 0.0
     wagered = 0.0
@@ -248,7 +223,6 @@ def main():
 
     roi = ((profit + wagered) / wagered) - 1.0
     formated_profit = '%.2f' % (profit / 100.0)
-    elapsed = '%.2f' % (time.time() - start_time)
 
     first_start = parse_timestamp(first_time)
     last_start = parse_timestamp(last_time)
@@ -259,6 +233,57 @@ def main():
     print(f'Cashed in {cashes} ({to_percentage(cashes / tournament_count)}%)')
     print(f'Made a profit of ${formated_profit} (ROI {to_percentage(roi)}%)')
     print(f'Longest win streak: {win_longest}. Longest lose streak: {lose_longest}.')
+
+
+def update_database(tournobjs):
+    db = Db()
+    db.create_if_needed()
+    
+    for tournament in tournobjs:
+        db.upsert_tournament(tournament)
+        for hand in tournament.hands:
+            db.upsert_hand(hand)
+
+    db.close()
+
+
+def main():
+    start_time = time.time()
+
+    # mode, path = argv[1], argv[2]
+    mode = 'd'
+    path = '.'
+
+    tournaments = {}
+    
+    if mode == 'f':
+        tournaments = dict(tournaments,  **parse_file(path))
+    elif mode == 'd':
+        for filename in listdir(path):
+            if filename.endswith('txt'):
+                parsed_tournaments = parse_file(filename)
+                for k, v in parsed_tournaments.items():
+                    if k not in tournaments:
+                        tournaments[k] = v
+                    else:
+                        for hand_id in v.keys():
+                            if hand_id not in tournaments[k]:
+                                tournaments[k][hand_id] = v[hand_id]
+
+    tournobjs = []
+    
+    for k, v in tournaments.items():
+        tournament_id, buyin_cents, rake_cents = k
+        tournament = Tournament(tournament_id, buyin_cents, rake_cents, list(v.values()))
+        tournament.finalize()
+        tournobjs.append(tournament)
+
+    tournobjs.sort(key=lambda t: t.start_time)
+
+    elapsed = '%.2f' % (time.time() - start_time)
+
+    produce_stats(tournobjs, elapsed)
+    update_database(tournobjs)
 
     plot.plot_tournaments(tournobjs, 'results.svg')
 
