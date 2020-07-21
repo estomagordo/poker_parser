@@ -244,7 +244,7 @@ def update_database(tournobjs):
         for hand in tournament.hands:
             db.upsert_hand(hand)
 
-    db.close()
+    db.commmit_and_close()
 
 
 def main():
@@ -258,7 +258,7 @@ def main():
         tournaments = dict(tournaments,  **parse_file(path))
     elif mode == 'd':
         for filename in listdir(path):
-            if filename.endswith('txt'):
+            if filename.endswith('txt') and filename != 'requirements.txt':
                 parsed_tournaments = parse_file(filename)
                 for k, v in parsed_tournaments.items():
                     if k not in tournaments:

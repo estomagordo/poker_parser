@@ -9,7 +9,8 @@ class Db:
 
         self.cursor = self.connection.cursor()
 
-    def close(self):
+    def commmit_and_close(self):
+        self.connection.commit()
         self.connection.close()
 
     def upsert_tournament(self, tournament):
@@ -72,7 +73,6 @@ class Db:
         )
 
         self.cursor.execute('INSERT OR REPLACE INTO hand VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
-        self.connection.commit()    
 
     def create_if_needed(self):
         create_tournament_statement = '''
@@ -134,4 +134,3 @@ class Db:
 
         self.cursor.execute(create_tournament_statement)
         self.cursor.execute(create_hand_statement)
-        self.connection.commit()
