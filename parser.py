@@ -98,12 +98,14 @@ def parse_hand(lines):
         before = -1
         hand = ''
 
-        if line[3] == 'lost':
-            deltas = line[4]
-            if not deltas[-1].isdigit():
-                deltas = deltas[:-1]
+        for x, part in enumerate(line):
+            if part == 'lost':
+                deltas = line[x + 1]
+                if not deltas[-1].isdigit():
+                    deltas = deltas[:-1]
 
-            before = after + int(deltas)
+                before = after + int(deltas)
+                break
         else:
             for part in line:
                 if part[0] == '+':
