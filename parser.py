@@ -191,8 +191,26 @@ def to_percentage(f):
     return '%.2f' % (f * 100.0)
 
 
-def produce_stats(tournobjs, elapsed):
-    tournament_count = len(tournobjs)
+def sessionize(tournaments):
+    sessions = []
+    session = []
+
+    for tournament in tournaments:
+        if not session:
+            session.append(tournament)
+        elif session[-1].end_time > tournament.start_time:
+            session.append(tournament)
+        else:
+            sessions.append(session)
+            session = [tournament]
+
+    sessions.append(session)
+
+    return sessions
+
+
+def produce_stats(tournaments):
+    tournament_count = len(tournaments)
     profit = 0.0
     wagered = 0.0
     cashes = 0
@@ -202,13 +220,15 @@ def produce_stats(tournobjs, elapsed):
     lose_longest = 0
     first_time = 10**10
     last_time = 0
+    biggest_recovery = 10**10
+    biggest_throwaway = 0
 
-    for t in tournobjs:
+    for t in tournaments:
         profit += t.hero_result_cents
         wagered += t.buyin_cents + t.rake_cents
 
         first_time = min(first_time, t.start_time)
-        last_time = max(last_time, t.start_time)
+        last_time = max(last_time, t.end_time)
 
         if t.hero_result_cents > 0.0:
             cashes += 1
@@ -219,22 +239,56 @@ def produce_stats(tournobjs, elapsed):
             win_longest = max(win_longest, win_streak)
             win_streak = 0
             lose_streak += 1
+        
+        highest = 0
+        lowest = 10**10
+
+        for x, hand in enumerate(t.hands):
+            highest = max(highest, hand.hero_after)
+            
+            if x < len(t.hands) - 1:
+                lowest = min(lowest, hand.hero_after)
+
+        if t.hero_result_cents > 0:
+            biggest_recovery = min(biggest_recovery, lowest)
+        else:
+            biggest_throwaway = max(biggest_throwaway, highest)
 
     win_longest = max(win_longest, win_streak)
     lose_longest = max(lose_longest, lose_streak)
 
     roi = ((profit + wagered) / wagered) - 1.0
     formated_profit = '%.2f' % (profit / 100.0)
+    result = 'profit' if profit >= 0.0 else 'loss'
 
     first_start = parse_timestamp(first_time)
-    last_start = parse_timestamp(last_time)
+    last_end = parse_timestamp(last_time)
 
-    print(f'Found {tournament_count} tournaments in {elapsed} seconds.')
     print(f'The first one started at: {first_start}')
-    print(f'The last one started at: {last_start}')
+    print(f'The last one ended at: {last_end}')
     print(f'Cashed in {cashes} ({to_percentage(cashes / tournament_count)}%)')
-    print(f'Made a profit of ${formated_profit} (ROI {to_percentage(roi)}%)')
+    print(f'Made a {result} of ${formated_profit} (ROI {to_percentage(roi)}%)')
     print(f'Longest win streak: {win_longest}. Longest lose streak: {lose_longest}.')
+    print(f'The biggest comeback came from {biggest_recovery} and the biggest throwaway came from {biggest_throwaway}.')
+
+
+def handle_stats(tournaments, full_stats):    
+    if full_stats:
+        print()
+
+        sessions = sessionize(tournaments)
+
+        print(f'Found {len(sessions)} different sessions.')
+
+        print('Session data:\n')
+
+        for x, session in enumerate(sessions):
+            print(f'Session #{x + 1} lasted for {round((session[-1].end_time - session[0].start_time) / 60.0, 2)} minutes.')
+            print(f'It contained {len(session)} tournaments.')
+            produce_stats(session)
+            print()
+
+    produce_stats(tournaments)
 
 
 def update_database(tournobjs):
@@ -254,6 +308,7 @@ def main():
 
     mode, path = argv[1], argv[2]
     use_db = len(argv) > 3 and argv[3] == 'write'
+    full_stats = len(argv) > 4 and argv[4] == 'full'
 
     tournaments = {}
     
@@ -282,9 +337,10 @@ def main():
     tournobjs.sort(key=lambda t: t.start_time)
 
     elapsed = '%.2f' % (time.time() - start_time)
+    print(f'Found {len(tournobjs)} tournaments in {elapsed} seconds.')
 
     if tournobjs:
-        produce_stats(tournobjs, elapsed)
+        handle_stats(tournobjs, full_stats)
 
     if use_db:
         update_database(tournobjs)
