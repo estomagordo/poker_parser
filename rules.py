@@ -1,5 +1,4 @@
 from collections import Counter
-from itertools import combinations
 
 
 def normalize(card):
@@ -35,45 +34,37 @@ def is_straight(hand):
     return ranks[0] + 4 == ranks[4] or ranks == [0, 1, 2, 3, 12]
 
 
-def score_high(cards):
-    best = []
+def score_high(hand):
+    multiples = Counter(card % 13 for card in hand)
+    ranks = tuple(reversed([card % 13 for card in hand]))
+    flush = is_flush(hand)
+    straight = is_straight(hand)
+    wheel = ranks == (12, 3, 2, 1, 0)
+    reverse_count_order = [v[0] for v in multiples.most_common()]
 
-    for hand in combinations(cards, 5):
-        multiples = Counter(card % 13 for card in hand)
-        ranks = tuple(reversed([card % 13 for card in hand]))
-        flush = is_flush(hand)
-        straight = is_straight(hand)
-        wheel = ranks == (12, 3, 2, 1, 0)
-        reverse_count_order = [v[0] for v in multiples.most_common()]
+    if flush and straight:
+        if wheel:
+            return (8, -1)
+        return (8, max(ranks))
+    elif any(multiples[rank] == 4 for rank in multiples):
+        return (7, reverse_count_order[0], reverse_count_order[1])
+    elif any(multiples[rank] == 3 for rank in multiples) and any(multiples[rank] == 2 for rank in multiples):
+        return (6, reverse_count_order[0], reverse_count_order[1])
+    elif flush:
+        return (5, ranks)
+    elif straight:
+        if wheel:
+            return (4, -1)
+        return (4, max(ranks))
+    elif any(multiples[rank] == 3 for rank in multiples):
+        return (3, reverse_count_order[0], max(reverse_count_order[1:]), min(reverse_count_order[1:]))
+    elif multiples[reverse_count_order[1]] == 2:
+        return (2, max(reverse_count_order[:2]), min(reverse_count_order[:2]), reverse_count_order[2])
+    elif any(multiples[rank] == 2 for rank in multiples):
+        singles = list(reversed(reverse_count_order[1:]))
+        return (1, reverse_count_order[0], singles[0], singles[1], singles[2])
+    return (0, ranks)
 
-        if flush and straight:
-            if wheel:
-                best = max(best, (8, -1))
-            else:
-                best = max(best, (8, max(ranks)))
-        elif any(multiples[rank] == 4 for rank in multiples):
-            best = max(best, (7, reverse_count_order[0], reverse_count_order[1]))
-        elif any(multiples[rank] == 3 for rank in multiples) and any(multiples[rank] == 2 for rank in multiples):
-            best = max(best, )(6, reverse_count_order[0], reverse_count_order[1]))
-        elif flush:
-            best = max(best, (5, ranks))
-        elif straight:
-            if wheel:
-                best = max(best, (4, -1))
-            else:
-                best = max(best, max(ranks))
-        elif any(multiples[rank] == 3 for rank in multiples):
-            best = max(best, (3, reverse_count_order[0], max(reverse_count_order[1:]), min(reverse_count_order[1:])))
-        elif multiples[reverse_count_order[1]] == 2:
-            best = max(best, (2, max(reverse_count_order[:2]), min(reverse_count_order[:2]), reverse_count_order[2]))
-        elif any(multiples[rank] == 2 for rank in multiples):
-            singles = reversed(reverse_count_order[1:])
-            best = max(best, (1, reverse_count_order[0], singles[0], singles[1], singles[2]))
-        else:
-            best = max(best, (0, ranks))
-
-    return best
-    
 
 def score_ace_to_five(cards):
     pass
