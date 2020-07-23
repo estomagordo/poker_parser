@@ -6,7 +6,7 @@ def normalize(card):
     SUITS = { 'c': 0, 'd': 13, 'h': 26, 's': 39 }
 
     rank = card[0]
-    suit = rank[1]
+    suit = card[1]
 
     return (BROADWAYS[rank] if rank in BROADWAYS else int(rank) - 2) + SUITS[suit]
 
@@ -28,7 +28,7 @@ def is_flush(hand):
 def is_straight(hand):
     ranks = sorted([card % 13 for card in hand])
 
-    if set(ranks) < 5:
+    if len(set(ranks)) < 5:
         return False
 
     return ranks[0] + 4 == ranks[4] or ranks == [0, 1, 2, 3, 12]
@@ -36,7 +36,7 @@ def is_straight(hand):
 
 def score_high(hand):
     multiples = Counter(card % 13 for card in hand)
-    ranks = tuple(reversed([card % 13 for card in hand]))
+    ranks = tuple(sorted([card % 13 for card in hand], reverse=True))
     flush = is_flush(hand)
     straight = is_straight(hand)
     wheel = ranks == (12, 3, 2, 1, 0)
@@ -78,7 +78,8 @@ def score_badugi(cards):
     pass
 
 
-def score(cards, rules='high'):
+def score(hand, rules='high'):
+    cards = [hand[:2], hand[2:4], hand[4:6], hand[6:8], hand[8:]] # Obv won't work for Badugi. Maybe split should occur higher uo?
     normalized = list(map(normalize, cards))
 
     if rules == 'high':
