@@ -1,5 +1,5 @@
 from collections import Counter
-from itertools import combinations
+from itertools import combinations, permutations
 
 
 def normalize(card):
@@ -109,3 +109,26 @@ def score_omaha(hole, community):
     community_cards = hand_split(community)
 
     return max(score(''.join(hand_two + community_three)) for hand_two in combinations(hole_cards, 2) for community_three in combinations(community_cards, 3))
+
+
+def icm(prizes, chips):
+    COMBOS = [1, 2, 6, 24, 120, 720, 5040, 40320, 362880]
+
+    player_count = len(chips)
+    total_chips = sum(chips)
+    values = [0.0] * player_count
+
+    for p in permutations(range(player_count)):
+        removed = 0
+        cum_prob = 1.0
+
+        for x, player in enumerate(p):
+            if x == len(prizes):
+                break
+
+            probability = chips[player] / (total_chips - removed)
+            cum_prob *= probability
+            removed += chips[player]
+            values[player] += cum_prob * prizes[x] / COMBOS[player_count - x - 2]
+
+    return values
