@@ -78,8 +78,12 @@ def score_badugi(cards):
     pass
 
 
+def hand_split(hand):
+    return [hand[x:x + 2] for x in range(0, len(hand), 2)]
+
+
 def score(hand, rules='high'):
-    cards = [hand[:2], hand[2:4], hand[4:6], hand[6:8], hand[8:]] # Obv won't work for Badugi. Maybe split should occur higher uo?
+    cards = hand_split(hand)
     normalized = list(map(normalize, cards))
 
     if rules == 'high':
