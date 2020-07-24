@@ -1,4 +1,5 @@
 from collections import Counter
+from itertools import combinations
 
 
 def normalize(card):
@@ -94,3 +95,17 @@ def score(hand, rules='high'):
         return score_deuce_to_seven(normalized)
     elif rules == 'badugi':
         return score_badugi(normalized)
+
+
+def score_holdem(hole, community):
+    hole_cards = hand_split(hole)
+    community_cards = hand_split(community)
+
+    return max(score(''.join(hand)) for hand in combinations(hole_cards + community_cards, 5))
+
+
+def score_omaha(hole, community):
+    hole_cards = hand_split(hole)
+    community_cards = hand_split(community)
+
+    return max(score(''.join(hand_two + community_three)) for hand_two in combinations(hole_cards, 2) for community_three in combinations(community_cards, 3))

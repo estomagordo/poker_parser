@@ -1,4 +1,4 @@
-from rules import score
+from rules import score, score_holdem, score_omaha
 
 
 def test_straight_flushes():
@@ -129,3 +129,47 @@ def test_between_hand_types():
     assert(score(worst_trips) > score(best_two_pair))
     assert(score(worst_two_pair) > score(best_one_pair))
     assert(score(worst_one_pair) > score(best_high_card))
+
+
+def test_holdem_scoring():
+    aces = 'AdAh'
+    other_aces = 'AsAc'
+    jackten = 'JsTc'
+    suitdiscon = '9d7d'
+
+    board_a = 'JhKdQc4s4c'
+    board_b = '6d5d4d3d2d'
+    board_c = 'KsJs9s4s2s'
+    board_d = 'JdTs4c4d8h'
+
+    assert(score_holdem(aces, board_a) == score('AdAhKd4s4c'))
+    assert(score_holdem(aces, board_a) == score_holdem(other_aces, board_a))
+    assert(score_holdem(aces, board_b) == score_holdem(other_aces, board_b))
+    assert(score_holdem(aces, board_c) < score_holdem(other_aces, board_c))
+    assert(score_holdem(jackten, board_d) == score('JsJdTcTs8h'))
+    assert(score_holdem(suitdiscon, board_b) > score_holdem(aces, board_b))
+    assert(score_holdem(suitdiscon, board_d) == score('JdTs9d8h7d'))
+
+
+def test_omaha_scoring():
+    aces = 'AdAcKc7c'
+    random = 'Jc9d4d4c'
+    pizza_special = 'KdKhKcKs'
+    low_con = '6d5h4d3h'
+
+    board_a = 'Ah9h9s4s2d'
+    board_b = 'Qc8c5c5s5d'
+    board_c = 'JdJs7d7h2h'
+
+    assert(score_omaha(aces, board_a) == score('AdAcAh9h9s'))
+    assert(score_omaha(aces, board_b) == score('AdAc5c5s5d'))
+    assert(score_omaha(aces, board_c) == score('Ad7cJd7d7h'))
+    assert(score_omaha(random, board_a) == score('9d4d9h9s4s'))
+    assert(score_omaha(random, board_b) == score('4d4c5c5s5d'))
+    assert(score_omaha(random, board_c) == score('Jc9dJdJs7d'))
+    assert(score_omaha(pizza_special, board_a) == score('KhKsAh9h9s'))
+    assert(score_omaha(pizza_special, board_b) == score('KdKs5c5s5d'))
+    assert(score_omaha(pizza_special, board_c) == score('KcKdJdJs7d'))
+    assert(score_omaha(low_con, board_a) == score('5h3hAh4s2d'))
+    assert(score_omaha(low_con, board_b) == score('6d5h5s5c5d'))
+    assert(score_omaha(low_con, board_c) == score('6d5hJdJs7d'))
