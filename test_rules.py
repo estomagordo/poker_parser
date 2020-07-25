@@ -1,4 +1,6 @@
-from rules import score, score_holdem, score_omaha
+from math import isclose
+
+from rules import icm, score, score_holdem, score_omaha
 
 
 def test_straight_flushes():
@@ -173,3 +175,57 @@ def test_omaha_scoring():
     assert(score_omaha(low_con, board_a) == score('5h3hAh4s2d'))
     assert(score_omaha(low_con, board_b) == score('6d5h5s5c5d'))
     assert(score_omaha(low_con, board_c) == score('6d5hJdJs7d'))
+
+
+def test_icm():
+    prizes_a = [84, 36]
+    prizes_b = [50, 30, 20]
+    prizes_c = [100]
+    prizes_d = [50, 50, 50]
+    prizes_e = [50, 50, 50, 50, 50]
+
+    stacks_a = [4500, 2700, 1800]
+    stacks_b = [100, 80, 25, 120, 55, 28]
+    stacks_c = [52, 13, 35]
+    stacks_d = [1200, 250, 220, 1330]
+    stacks_e = [2000, 500, 100, 2900, 1400, 2200, 1100]
+
+    icm_a = icm(prizes_a, stacks_a)
+    icm_b = icm(prizes_b, stacks_b)
+    icm_c = icm(prizes_c, stacks_c)
+    icm_d = icm(prizes_d, stacks_d)
+    icm_e = icm(prizes_e, stacks_e)
+
+    assert(isclose(icm_a[0], 54.21, abs_tol=0.01))
+    assert(isclose(icm_a[1], 38.7, abs_tol=0.01))
+    assert(isclose(icm_a[2], 27.09, abs_tol=0.01))
+
+    assert(isclose(icm_b[0], 23.50, abs_tol=0.01))
+    assert(isclose(icm_b[1], 20.05, abs_tol=0.01))
+    assert(isclose(icm_b[2], 7.21, abs_tol=0.01))
+    assert(isclose(icm_b[3], 26.42, abs_tol=0.01))
+    assert(isclose(icm_b[4], 14.79, abs_tol=0.01))
+    assert(isclose(icm_b[5], 8.03, abs_tol=0.01))
+
+    assert(isclose(icm_c[0], 52.0, abs_tol=0.01))
+    assert(isclose(icm_c[1], 13.0, abs_tol=0.01))
+    assert(isclose(icm_c[2], 35.0, abs_tol=0.01))
+
+    assert(isclose(icm_d[0], 48.02, abs_tol=0.01))
+    assert(isclose(icm_d[1], 28.37, abs_tol=0.01))
+    assert(isclose(icm_d[2], 25.22, abs_tol=0.01))
+    assert(isclose(icm_d[3], 48.4, abs_tol=0.01))
+
+    assert(isclose(icm_e[0], 46.04, abs_tol=0.01))
+    assert(isclose(icm_e[1], 22.54, abs_tol=0.01))
+    assert(isclose(icm_e[2], 5.07, abs_tol=0.01))
+    assert(isclose(icm_e[3], 48.25, abs_tol=0.01))
+    assert(isclose(icm_e[4], 42.41, abs_tol=0.01))
+    assert(isclose(icm_e[5], 46.74, abs_tol=0.01))
+    assert(isclose(icm_e[6], 38.96, abs_tol=0.01))
+
+    assert(isclose(sum(prizes_a), sum(icm_a), abs_tol=0.01))
+    assert(isclose(sum(prizes_b), sum(icm_b), abs_tol=0.01))
+    assert(isclose(sum(prizes_c), sum(icm_c), abs_tol=0.01))
+    assert(isclose(sum(prizes_d), sum(icm_d), abs_tol=0.01))
+    assert(isclose(sum(prizes_e), sum(icm_e), abs_tol=0.01))
