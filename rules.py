@@ -1,6 +1,8 @@
+
 from collections import Counter
 from itertools import combinations, permutations
 from random import shuffle
+from subprocess import check_output
 
 
 def normalize(card):
@@ -133,3 +135,60 @@ def icm(prizes, chips):
             values[player] += cum_prob * prizes[x] / COMBOS[player_count - x - 2]
 
     return values
+
+"""
+Relying on poker stove on the command line for now.
+"""
+def get_equities(hands, game='holdem'):
+    if game != 'holdem':
+        raise NotImplementedError('Check back later')
+
+    if len(hands) != 2:
+        raise NotImplementedError('Check back later')
+
+    def parse_hand(hand):
+        return list(map(float, hand[hand.find('(') + 1:hand.find(')')].split()))[:2]
+
+    path = '/home/estomagordo/pokerstove/build/bin/ps-eval'
+    
+    parsed = [parse_hand(hand) for hand in check_output([path] + hands).decode('utf-8').split('\n') if hand]
+
+    return [[int(hand[0]), int(hand[1] * 2.0)] for hand in parsed]
+
+
+def calculate_hero_evs(hands, potsize, stacks, payouts, first_in_pos, actual):
+    # stacks[0] should map to hands[0], stacks[1] should map to hands[1]
+
+    equities = get_equities(hands)
+
+    hero_wins = list(stacks)
+    split = list(stacks)
+    hero_loses = list(stacks)
+
+    hero_wins[0] += potsize
+    split[0] += potsize // 2
+    split[1] += potsize // 2
+    hero_loses[1] += potsize
+
+    if potsize % 2:
+        if first_in_pos:
+            split[1] += 1
+        else:
+            split[0] += 1
+
+    hand_count = sum(equities[0]) + equities[1][0]
+
+    icm_hero_wins = icm(payouts, hero_wins)
+    icm_split = icm(payouts, split)
+    icm_hero_loses = icm(payouts, hero_loses)
+
+    cEV = (hero_wins[0] * equities[0][0] + split[0] * equities[0][1] + hero_loses[0] * equities[1][0]) / hand_count
+    icmEV = (icm_hero_wins[0] * equities[0][0] + icm_split[0] * equities[0][1] + icm_hero_loses[0] * equities[1][0]) / hand_count
+    
+    actual_chips = hero_wins[0] if actual == 0 else split[0] if actual == 1 else hero_loses[0]
+    actual_icm = icm_hero_wins[0] if actual == 0 else icm_split[0] if actual == 1 else icm_hero_loses[0]
+
+    return cEV, icmEV, actual_chips, actual_icm
+
+
+print(calculate_hero_evs(['AcKh', 'QdQc'], 1410, [0, 125, 500, 455], [380, 380, 380], True, 2))
