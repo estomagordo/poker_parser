@@ -189,6 +189,3 @@ def calculate_hero_evs(hands, potsize, stacks, payouts, first_in_pos, actual):
     actual_icm = icm_hero_wins[0] if actual == 0 else icm_split[0] if actual == 1 else icm_hero_loses[0]
 
     return cEV, icmEV, actual_chips, actual_icm
-
-
-print(calculate_hero_evs(['AcKh', 'QdQc'], 1410, [0, 125, 500, 455], [380, 380, 380], True, 2))

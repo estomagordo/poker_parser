@@ -9,6 +9,7 @@ import plot
 
 from db import Db
 from hand import Hand
+from rules import calculate_hero_evs
 from tournament import Tournament
 
 
@@ -142,6 +143,62 @@ def parse_hand(lines):
                 hero_cards = line[4][:-1] + line[5]
                 break
 
+    hero_2way_ai = False
+    hero_2way_ai_street = None
+    hero_2way_ai_opponent_hand = None
+    hero_2way_ai_pot_size = None
+    hero_2way_ai_cevdiff = None
+    hero_2way_ai_icmevdiff = None
+
+    cEV, icmEV, actual_chips, actual_icm = -1, -1, -1, -1
+      
+    hero_ai = any('Hero is all-In.' in ' '.join(line) for line in lines)
+
+    if hero_ai:
+        ai = []
+        
+        for line in lines:
+            if 'is all-In.' in ' '.join(line):
+                ai.append(line[0])
+            if 'Dealing Flop' in ' '.join(line):
+                break
+
+        if len(ai) == 2:          
+            hero_2way_ai = True
+            hero_2way_ai_street = 0
+            villain = [p for p in ai if p != 'Hero'][0]
+
+            for line in lines[::-1]:
+                if line[0] == villain:
+                    hero_2way_ai_opponent_hand = line[9][:-1] + line[10]
+                    break
+
+            for line in lines:
+                if line[0] == 'Main':
+                    hero_2way_ai_pot_size = int(line[2])
+                    break
+
+            villain_cards = ''
+
+            for line in lines:
+                if line[1] == 'balance' and line[0] == villain:
+                    villain_cards = line[9][:-1] + line[10] if line[9][-1] == ',' else line[5][:-1] + line[6]
+                    break
+            
+            hands = [hero_cards, villain_cards]
+            stacks = [hero_after] + [v[1] for v in villains]
+            first_in_pos = True #Obviously have to do this for real later
+            actual = 1
+
+            for line in lines:
+                if line[1] == 'balance':
+                    if line[0] == 'Hero':
+                        actual -= any('+' in part for part in line)
+                    elif line[0] == villain:
+                        actual += any('+' in part for part in line)
+
+            cEV, icmEV, actual_chips, actual_icm = calculate_hero_evs(hands, hero_2way_ai_pot_size, stacks, [380, 380, 380], first_in_pos, actual)
+    
     hand = Hand(
         hand_id,
         time,
@@ -158,14 +215,29 @@ def parse_hand(lines):
         flop,
         turn,
         river,
+        hero_2way_ai,
+        hero_2way_ai_street,
+        hero_2way_ai_opponent_hand,
+        hero_2way_ai_pot_size,
+        hero_2way_ai_cevdiff,
+        hero_2way_ai_icmevdiff,
+        cEV,
+        icmEV,
+        actual_chips,
+        actual_icm,
         full
         )
     
-    return tournament_id, buyin_cents, rake_cents, hand
+    return tournament_id, buyin_cents, rake_cents, hand, cEV, icmEV, actual_chips, actual_icm
 
 
 def parse_file(filename):
+    print('Parsing', filename)
     tournaments = defaultdict(dict)
+
+    totCEV = 0.0
+    totICMEV = 0.0
+    counter = 0
 
     handpart = []
 
@@ -175,13 +247,23 @@ def parse_file(filename):
                 handpart.append(line.split())
             elif handpart:
                 if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
-                    tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
+                    tournament_id, buyin_cents, rake_cents, hand, cEV, icmEV, actual_chips, actual_icm = parse_hand(handpart)
+                    if actual_chips > -1:
+                        counter += 1
+                        totCEV += (actual_chips - cEV)
+                        totICMEV += (actual_icm - icmEV)
+                        print(f'Hand number {counter}. Chip EV: {totCEV}. ICM EV: {totICMEV}')
                     tournaments[(tournament_id, buyin_cents, rake_cents)][hand.id] = hand
                 handpart = []
 
     if handpart:
         if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
-            tournament_id, buyin_cents, rake_cents, hand = parse_hand(handpart)
+            tournament_id, buyin_cents, rake_cents, hand, cEV, icmEV, actual_chips, actual_icm = parse_hand(handpart)
+            if actual_chips > -1:
+                        counter += 1
+                        totCEV += (actual_chips - cEV)
+                        totICMEV += (actual_icm - icmEV)
+                        print(f'Hand number {counter}. Chip EV: {totCEV}. ICM EV: {totICMEV}')
             tournaments[(tournament_id, buyin_cents, rake_cents)][hand.id] = hand
     
     return tournaments

@@ -69,10 +69,20 @@ class Db:
             hand.flop,
             hand.turn,
             hand.river,
+            hand.hero_2way_ai,
+            hand.hero_2way_ai_street,
+            hand.hero_2way_ai_opponent_hand,
+            hand.hero_2way_ai_pot_size,
+            hand.hero_2way_ai_cevdiff,
+            hand.hero_2way_ai_icmevdiff,
+            hand.cEV,
+            hand.icmEV,
+            hand.actual_chips,
+            hand.actual_icm,
             hand.full
         )
 
-        self.cursor.execute('INSERT OR REPLACE INTO hand VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
+        self.cursor.execute('INSERT OR REPLACE INTO hand VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', data)
 
     def create_if_needed(self):
         create_tournament_statement = '''
@@ -128,6 +138,16 @@ class Db:
                 flop TEXT,
                 turn TEXT,
                 river TEXT,
+                hero_2way_ai INTEGER NOT NULL,
+                hero_2way_ai_street INTEGER,
+                hero_2way_opponent_hand TEXT,
+                hero_2way_ai_pot_size INTEGER,
+                hero_2way_ai_cevdiff FLOAT,
+                hero_2way_ai_icmevdiff FLOAT,
+                cEV INTEGER,
+                icmEV INTEGER,
+                actual_chips INTEGER,
+                actual_icm INTEGER,
                 full TEXT NOT NULL,
                 FOREIGN KEY(tournament_id) REFERENCES tournament(id)
             );'''
