@@ -46,6 +46,61 @@ def parse_cents(s):
     return 100 * dollars + cents
 
 
+def get_evs(lines, hero_cards, villains, hero_after):
+    cEV, icmEV, actual_chips, actual_icm = -1, -1, -1, -1
+
+    return cEV, icmEV, actual_chips, actual_icm # Rather than properly separating it, for now.
+      
+    hero_ai = any('Hero is all-In.' in ' '.join(line) for line in lines)
+
+    if hero_ai:
+        ai = []
+        
+        for line in lines:
+            if 'is all-In.' in ' '.join(line):
+                ai.append(line[0])
+            if 'Dealing Flop' in ' '.join(line):
+                break
+
+        if len(ai) == 2:          
+            hero_2way_ai = True
+            hero_2way_ai_street = 0
+            villain = [p for p in ai if p != 'Hero'][0]
+
+            for line in lines[::-1]:
+                if line[0] == villain:
+                    hero_2way_ai_opponent_hand = line[9][:-1] + line[10]
+                    break
+
+            for line in lines:
+                if line[0] == 'Main':
+                    hero_2way_ai_pot_size = int(line[2])
+                    break
+
+            villain_cards = ''
+
+            for line in lines:
+                if line[1] == 'balance' and line[0] == villain:
+                    villain_cards = line[9][:-1] + line[10] if line[9][-1] == ',' else line[5][:-1] + line[6]
+                    break
+            
+            hands = [hero_cards, villain_cards]
+            stacks = [hero_after] + [v[1] for v in villains]
+            first_in_pos = True #Obviously have to do this for real later
+            actual = 1
+
+            for line in lines:
+                if line[1] == 'balance':
+                    if line[0] == 'Hero':
+                        actual -= any('+' in part for part in line)
+                    elif line[0] == villain:
+                        actual += any('+' in part for part in line)
+
+            cEV, icmEV, actual_chips, actual_icm = calculate_hero_evs(hands, hero_2way_ai_pot_size, stacks, [380, 380, 380], first_in_pos, actual)
+
+    return cEV, icmEV, actual_chips, actual_icm
+
+
 def parse_hand(lines):
     hand_id = lines[0][5]
     blinds = lines[1][0]
@@ -150,54 +205,7 @@ def parse_hand(lines):
     hero_2way_ai_cevdiff = None
     hero_2way_ai_icmevdiff = None
 
-    cEV, icmEV, actual_chips, actual_icm = -1, -1, -1, -1
-      
-    hero_ai = any('Hero is all-In.' in ' '.join(line) for line in lines)
-
-    if hero_ai:
-        ai = []
-        
-        for line in lines:
-            if 'is all-In.' in ' '.join(line):
-                ai.append(line[0])
-            if 'Dealing Flop' in ' '.join(line):
-                break
-
-        if len(ai) == 2:          
-            hero_2way_ai = True
-            hero_2way_ai_street = 0
-            villain = [p for p in ai if p != 'Hero'][0]
-
-            for line in lines[::-1]:
-                if line[0] == villain:
-                    hero_2way_ai_opponent_hand = line[9][:-1] + line[10]
-                    break
-
-            for line in lines:
-                if line[0] == 'Main':
-                    hero_2way_ai_pot_size = int(line[2])
-                    break
-
-            villain_cards = ''
-
-            for line in lines:
-                if line[1] == 'balance' and line[0] == villain:
-                    villain_cards = line[9][:-1] + line[10] if line[9][-1] == ',' else line[5][:-1] + line[6]
-                    break
-            
-            hands = [hero_cards, villain_cards]
-            stacks = [hero_after] + [v[1] for v in villains]
-            first_in_pos = True #Obviously have to do this for real later
-            actual = 1
-
-            for line in lines:
-                if line[1] == 'balance':
-                    if line[0] == 'Hero':
-                        actual -= any('+' in part for part in line)
-                    elif line[0] == villain:
-                        actual += any('+' in part for part in line)
-
-            cEV, icmEV, actual_chips, actual_icm = calculate_hero_evs(hands, hero_2way_ai_pot_size, stacks, [380, 380, 380], first_in_pos, actual)
+    cEV, icmEV, actual_chips, actual_icm = get_evs(lines, hero_cards, villains, hero_after)
     
     hand = Hand(
         hand_id,
