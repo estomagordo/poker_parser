@@ -111,7 +111,7 @@ def parse_hand(lines):
     rake_cents = parse_cents(lines[1][13][1:])
     time = parse_datetime(' '.join(lines[1][-6:]))
     player_count = int(lines[3][-1].split('/')[0])
-    full = ''.join(''.join(line) for line in lines)
+    full = '\n'.join(' '.join(line) for line in lines)
 
     villains = [[-1, -1, '']] * 9
     hero_cards = None
