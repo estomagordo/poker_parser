@@ -254,7 +254,10 @@ def parse_file(filename):
             if line.strip():
                 handpart.append(line.split())
             elif handpart:
-                if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
+                sng = handpart[1][7] == '(SNG'
+                two = handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)'
+                five = handpart[1][11] == '$4.8' and handpart[1][13] == '$0.2)'
+                if sng and (two or five):
                     tournament_id, buyin_cents, rake_cents, hand, cEV, icmEV, actual_chips, actual_icm = parse_hand(handpart)
                     if actual_chips > -1:
                         counter += 1
@@ -265,7 +268,10 @@ def parse_file(filename):
                 handpart = []
 
     if handpart:
-        if handpart[1][7] == '(SNG' and handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)':
+        sng = handpart[1][7] == '(SNG'
+        two = handpart[1][11] == '$1.9' and handpart[1][13] == '$0.1)'
+        five = handpart[1][11] == '$4.8' and handpart[1][13] == '$0.2)'
+        if sng and (two or five):
             tournament_id, buyin_cents, rake_cents, hand, cEV, icmEV, actual_chips, actual_icm = parse_hand(handpart)
             if actual_chips > -1:
                         counter += 1
