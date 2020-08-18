@@ -318,10 +318,18 @@ def produce_stats(tournaments):
     last_time = 0
     biggest_recovery = 10**10
     biggest_throwaway = 0
+    buyins = {}
 
     for t in tournaments:
         profit += t.hero_result_cents
-        wagered += t.buyin_cents + t.rake_cents
+        cost = t.buyin_cents + t.rake_cents
+        wagered += cost
+
+        if cost not in buyins:
+            buyins[cost] = [0, 0.0]
+
+        buyins[cost][0] += 1
+        buyins[cost][1] += t.hero_result_cents
 
         first_time = min(first_time, t.start_time)
         last_time = max(last_time, t.end_time)
@@ -366,6 +374,12 @@ def produce_stats(tournaments):
     print(f'Made a {result} of ${formated_profit} (ROI {to_percentage(roi)}%)')
     print(f'Longest win streak: {win_longest}. Longest lose streak: {lose_longest}.')
     print(f'The biggest comeback came from {biggest_recovery} and the biggest throwaway came from {biggest_throwaway}.')
+    print('Per buyin results:')
+    for k, v in buyins.items():
+        buyin = '%.2f' % (k / 100.0)
+        number = v[0]
+        result = '%.2f' % (v[1] / 100.0)
+        print(f'${buyin}: {result} in {number} played.')
 
 
 def handle_stats(tournaments, full_stats):    
